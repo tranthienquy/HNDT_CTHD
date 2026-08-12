@@ -40,7 +40,7 @@
     <img src="media/image3.svg" alt="" style="position:absolute;left:1177px;top:657px;width:402px;height:41px" />
     <div style="position:absolute;left:1010px;top:753px;width:722px;font-family:'Be Vietnam Pro',sans-serif;color:#000"><div style="font-size:29px;line-height:33px;font-weight:700">PHẠM TUYẾT HẠNH HÀ</div><div style="font-size:29px;line-height:33px;font-weight:700">Ban Công tác Học đường</div></div>
     <div style="position:absolute;left:1012px;top:825px;width:317px;font:300 24px/28px 'Be Vietnam Pro',sans-serif;color:#000">Khối Giáo dục FPT</div>
-    <div style="position:absolute;left:1021px;top:932px;width:361px;font-family:'Be Vietnam Pro',sans-serif;font-weight:700;font-size:24px;line-height:33px"><div style="color:#000">CẦN THƠ</div><div style="color:#004AAD">11.08.2026</div></div>
+    <div style="position:absolute;left:1021px;top:932px;width:361px;font-family:'Be Vietnam Pro',sans-serif;font-weight:700;font-size:24px;line-height:33px"><div style="color:#000">CẦN THƠ</div><div style="color:#004AAD">13.08.2026</div></div>
     <img src="media/image5.png" alt="" style="position:absolute;left:1482px;top:915px;width:97px;height:103px;object-fit:contain" />
     <div style="position:absolute;left:1597px;top:938px;width:248px;font-family:'Be Vietnam Pro',sans-serif;font-weight:700;font-size:28px;line-height:31px;color:#000"><div>#fptstudent</div><div>experiencespace</div></div>
     <img src="media/image4.png" alt="" style="position:absolute;left:1707px;top:751px;width:136px;height:121px;object-fit:contain" /></section>
@@ -95,7 +95,7 @@
   <section data-label="21" data-screen-label="21" style="display:flex;align-items:center;justify-content:center;background:#000"><img src="slides-min/21.jpg" alt="Slide 21" style="width:100%;height:100%;object-fit:contain;display:block" /></section>
   <section data-label="22" data-screen-label="22" style="display:flex;align-items:center;justify-content:center;background:#000"><img src="slides-min/22.jpg" alt="Slide 22" style="width:100%;height:100%;object-fit:contain;display:block" /></section>
   <section data-label="23" data-screen-label="23" style="display:flex;align-items:center;justify-content:center;background:#000"><img src="slides-min/23.jpg" alt="Slide 23" style="width:100%;height:100%;object-fit:contain;display:block" /></section>
-  <section data-label="24" data-screen-label="24" style="display:flex;align-items:center;justify-content:center;background:#000"><img src="slides-min/24.jpg" alt="Slide 24" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block" /><div style="position:absolute;left:50%;bottom:44px;transform:translateX(-50%);padding:14px 28px;border-radius:999px;background:rgba(0,0,0,0.72);font:600 26px 'Be Vietnam Pro',sans-serif;color:#fff">Video: xem ở bản trình chiếu trực tuyến</div></section>
+  <section data-label="24" data-screen-label="24" style="display:flex;align-items:center;justify-content:center;background:#000"><img src="slides/24.jpg" alt="Slide 24" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block" /><video ref="{{ videoRef }}" src="slides/video.mp4" controls="{{ true }}" playsInline="{{ true }}" preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;background:transparent"></video></section>
   <section data-label="25" data-screen-label="25" style="display:flex;align-items:center;justify-content:center;background:#000"><img src="slides-min/25.jpg" alt="Slide 25" style="width:100%;height:100%;object-fit:contain;display:block" /></section>
   <section data-label="26" data-screen-label="26" style="display:flex;align-items:center;justify-content:center;background:#000"><img src="slides-min/26.jpg" alt="Slide 26" style="width:100%;height:100%;object-fit:contain;display:block" /></section>
   <section data-label="27" data-screen-label="27" style="display:flex;align-items:center;justify-content:center;background:#000"><img src="slides-min/27.jpg" alt="Slide 27" style="width:100%;height:100%;object-fit:contain;display:block" /></section>
@@ -118,6 +118,8 @@ class Component extends DCLogic {
     this._KEY = 'hndt2026-countdown-start';
     this._mount();
     this._setupVideo();
+    this._setupFullscreen();
+    this._setupRailToggle();
   }
 
   // Slides 3–35 are re-rendered live from the source PDFs (vector → crisp at
@@ -217,10 +219,99 @@ class Component extends DCLogic {
       v.currentTime = 0;
     }
   }
+
+  // Presenting fullscreen — button lives in deck-stage's own bottom overlay
+  // toolbar (next to prev/next/reset) so it inherits its fade/hover styling
+  // for free; we only inject the button + wiring here.
+  _setupFullscreen(tries) {
+    tries = tries || 0;
+    const deck = document.querySelector('deck-stage');
+    const overlay = deck && deck.shadowRoot && deck.shadowRoot.querySelector('.overlay');
+    if (!overlay) { if (tries < 80) setTimeout(() => this._setupFullscreen(tries + 1), 120); return; }
+    if (overlay.querySelector('.btn.fullscreen')) return;
+
+    // Both icons are one corner bracket rotated 90/180/270° about the
+    // viewBox centre (8,8) — guarantees all four corners match exactly,
+    // instead of four hand-typed paths that can (and did) drift out of sync.
+    const EXPAND = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 6V2H6"/><path d="M2 6V2H6" transform="rotate(90 8 8)"/><path d="M2 6V2H6" transform="rotate(180 8 8)"/><path d="M2 6V2H6" transform="rotate(270 8 8)"/></svg>';
+    const COMPRESS = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2V6H2"/><path d="M6 2V6H2" transform="rotate(90 8 8)"/><path d="M6 2V6H2" transform="rotate(180 8 8)"/><path d="M6 2V6H2" transform="rotate(270 8 8)"/></svg>';
+    const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+
+    const btn = document.createElement('button');
+    btn.className = 'btn fullscreen';
+    btn.type = 'button';
+    const sync = () => {
+      const on = !!fsEl();
+      btn.innerHTML = on ? COMPRESS : EXPAND;
+      btn.setAttribute('aria-label', on ? 'Exit full screen' : 'Full screen');
+      btn.title = on ? 'Exit full screen (F)' : 'Full screen (F)';
+    };
+    sync();
+    btn.addEventListener('click', () => {
+      if (fsEl()) (document.exitFullscreen || document.webkitExitFullscreen || function () {}).call(document);
+      else {
+        const el = document.documentElement;
+        (el.requestFullscreen || el.webkitRequestFullscreen || function () {}).call(el);
+      }
+    });
+    document.addEventListener('fullscreenchange', sync);
+    document.addEventListener('webkitfullscreenchange', sync);
+    this._onFsKey = (e) => {
+      if (e.key !== 'f' && e.key !== 'F') return;
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      btn.click();
+    };
+    window.addEventListener('keydown', this._onFsKey);
+
+    const divider = document.createElement('span');
+    divider.className = 'divider';
+    overlay.append(divider, btn);
+  }
+
+  // Slide list (rail) show/hide — uses deck-stage's own soft-hide protocol
+  // (__deck_rail_visible), normally driven by the authoring platform, so the
+  // rail slides out with its built-in animation and the choice persists to
+  // localStorage the same way deck-stage already does it internally.
+  _setupRailToggle(tries) {
+    tries = tries || 0;
+    const deck = document.querySelector('deck-stage');
+    const overlay = deck && deck.shadowRoot && deck.shadowRoot.querySelector('.overlay');
+    if (!overlay) { if (tries < 80) setTimeout(() => this._setupRailToggle(tries + 1), 120); return; }
+    if (overlay.querySelector('.btn.rail-toggle')) return;
+
+    const ON = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><rect x="1.5" y="2.5" width="5" height="11" rx="1.5" fill="currentColor" stroke="none" opacity="0.55"/></svg>';
+    const OFF = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><line x1="6.5" y1="2.5" x2="6.5" y2="13.5"/></svg>';
+
+    let visible = true;
+    try { visible = localStorage.getItem('deck-stage.railVisible') !== '0'; } catch (e) {}
+
+    const btn = document.createElement('button');
+    btn.className = 'btn rail-toggle';
+    btn.type = 'button';
+    const sync = () => {
+      btn.innerHTML = visible ? ON : OFF;
+      btn.setAttribute('aria-label', visible ? 'Hide slide list' : 'Show slide list');
+      btn.setAttribute('aria-pressed', String(visible));
+      btn.title = visible ? 'Hide slide list' : 'Show slide list';
+    };
+    sync();
+    btn.addEventListener('click', () => {
+      visible = !visible;
+      sync();
+      window.postMessage({ type: '__deck_rail_visible', on: visible }, '*');
+    });
+
+    const divider = document.createElement('span');
+    divider.className = 'divider';
+    overlay.append(divider, btn);
+  }
+
   componentWillUnmount() {
     if (this._raf) cancelAnimationFrame(this._raf);
     if (this._deck && this._onChange) this._deck.removeEventListener('slidechange', this._onChange);
     if (this._frame && this._frame.parentNode) this._frame.parentNode.removeChild(this._frame);
+    if (this._onFsKey) window.removeEventListener('keydown', this._onFsKey);
   }
 
   _mount(tries) {
