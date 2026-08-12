@@ -1,0 +1,6 @@
+# Cloudflare API token — must never be committed
+.env
+
+# wrangler local state
+.wrangler/
+node_modules/

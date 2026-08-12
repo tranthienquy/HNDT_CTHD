@@ -19,9 +19,6 @@ A slide deck for the FPT University education conference (Cần Thơ). It's plai
 | `deck-stage.js`, `support.js` | The slide viewer engine. **Don't edit these** — they're vendored/generated. All deck-specific behavior (countdown timer, video, fullscreen button, etc.) lives in the `<script data-dc-script>` block at the bottom of each `.dc.html` file instead. |
 | `cf-pages-deploy/` | The exact folder that gets uploaded to Cloudflare when you deploy. It's a copy of the "ban chia sẻ" file (as `index.html`) plus `support.js`, `deck-stage.js`, `media/`, `slides/`. |
 | `wrangler.jsonc` | Cloudflare deploy config (project name, which folder to upload). |
-| `deploy.sh` | One-command deploy script (Windows/Linux/macOS Terminal). Run `./deploy.sh`. |
-| `deploy-mac.command` | Same thing, double-clickable from macOS Finder. |
-| `.env` | Your saved Cloudflare API token (git-ignored — never committed). You create/edit this yourself; see [Deploying to Cloudflare](#deploying-to-cloudflare). |
 
 ## Previewing locally
 
@@ -61,47 +58,33 @@ The live site is a Cloudflare Worker (static assets), deployed with [Wrangler](h
 
 ### 1. One-time: get a Cloudflare API token
 
-In the Cloudflare dashboard: **My Profile → API Tokens → Create Token** (a token with "Edit Cloudflare Workers" permissions is enough).
+In the Cloudflare dashboard: **My Profile → API Tokens → Create Token** (a token with "Edit Cloudflare Workers" permissions is enough). Copy it somewhere safe — treat it like a password, never commit it to git.
 
-Save it in a file named `.env` in this folder (create it if it's not there), one line:
+### 2. Update the deploy folder
 
+After editing the deck, copy your updated **"ban chia sẻ"** file into the deploy folder (this is the version that's actually live):
+
+```bash
+cp "HNDT 2026 - ban chia se.dc.html" cf-pages-deploy/index.html
 ```
-CLOUDFLARE_API_TOKEN=paste-your-token-here
+
+If you also changed anything in `media/`, `slides/`, `deck-stage.js`, or `support.js`, copy those into `cf-pages-deploy/` too (or just re-copy the whole folders):
+
+```bash
+cp -r media cf-pages-deploy/media
+cp -r slides cf-pages-deploy/slides
+cp support.js deck-stage.js cf-pages-deploy/
 ```
 
-`.env` is listed in `.gitignore`, so it's never committed/pushed to GitHub — it only lives on your own machine. The deploy scripts below pick it up automatically so you never have to paste the token again. **Never share `.env` or paste its contents into git, chat, or anywhere public** — if a token ever leaks, revoke it in the Cloudflare dashboard and create a new one.
+### 3. Deploy
 
-### 2. Deploy — one command
-
-After editing the deck (in any of the `.dc.html` files, `media/`, `slides/`, etc.):
-
-- **Windows / Linux (or macOS Terminal):**
-  ```bash
-  ./deploy.sh
-  ```
-- **macOS — double-click:** double-click **`deploy-mac.command`** in Finder. It opens Terminal, runs the same deploy, and keeps the window open so you can read the result.
-  - First time only, macOS may block it as "from an unidentified developer" — right-click (or Control-click) `deploy-mac.command` → **Open** → **Open** to approve it once.
-
-Either way it copies the latest **"ban chia sẻ"** file + `media/`, `slides/`, `deck-stage.js`, `support.js` into `cf-pages-deploy/` (the folder that's actually live) and deploys it. If no `.env` file is found and `CLOUDFLARE_API_TOKEN` isn't already set in your shell, it'll prompt you to paste the token instead — the input is hidden, so it's safe to type/paste even with others around.
-
-If it says "permission denied," run `chmod +x deploy.sh deploy-mac.command` once, then try again.
+```bash
+CLOUDFLARE_API_TOKEN="paste-your-token-here" npx wrangler pages deploy cf-pages-deploy --project-name=hndt-2026
+```
 
 Wrangler uploads only the files that changed, and prints the live URL when done — it should always be https://hndt-2026.nguyennhathuy2110.workers.dev.
 
 > **Note:** you may see a Wrangler message about "the latest version of Cloudflare Pages, now part of Cloudflare Workers" — that's expected/normal, just informational.
-
-<details>
-<summary>What <code>deploy.sh</code> does, if you'd rather run the steps by hand</summary>
-
-```bash
-cp "HNDT 2026 - ban chia se.dc.html" cf-pages-deploy/index.html
-cp -r media/. cf-pages-deploy/media/
-cp -r slides/. cf-pages-deploy/slides/
-cp support.js deck-stage.js cf-pages-deploy/
-CLOUDFLARE_API_TOKEN="paste-your-token-here" npx wrangler pages deploy cf-pages-deploy --project-name=hndt-2026
-```
-
-</details>
 
 ## Saving your changes to git
 
